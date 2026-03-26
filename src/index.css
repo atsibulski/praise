@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --color-cookie: #F59E0B;
+  --color-cookie-dark: #D97706;
+  --color-cookie-light: #FEF3C7;
+  --color-mint: #10B981;
+  --color-mint-dark: #059669;
+  --color-mint-light: #D1FAE5;
+  --color-purple: #8B5CF6;
+  --color-purple-light: #EDE9FE;
+  --color-pink: #EC4899;
+  --color-surface: #FFFFFF;
+  --color-surface-dim: #F9FAFB;
+  --color-surface-dimmer: #F3F4F6;
+}
+
+html, body, #root {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 30%);
+  min-height: 100vh;
+}
+
+/* Animated count-up digit */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-up {
+  animation: countUp 0.4s ease-out forwards;
+}
+
+/* Cookie burst particle */
+@keyframes cookieBurst {
+  0% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.5) translateY(-60px); }
+}
+
+.animate-cookie-burst {
+  animation: cookieBurst 0.8s ease-out forwards;
+}
+
+/* Confetti */
+@keyframes confettiFall {
+  0% { opacity: 1; transform: translateY(-100vh) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+}
+
+.animate-confetti {
+  animation: confettiFall 2.5s ease-in forwards;
+}
+
+/* Swipe hint */
+@keyframes swipeHint {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-20px); }
+}
+
+.animate-swipe-hint {
+  animation: swipeHint 1.5s ease-in-out 1;
+}
