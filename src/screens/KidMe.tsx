@@ -210,7 +210,7 @@ export default function KidMe() {
         {/* My Money CTA */}
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => navigate('vault')}
+          onClick={() => navigate('../vault')}
           className="w-full bg-gradient-to-r from-amber-dark to-[#F59E0B] text-white font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2"
         >
           <span className="text-lg">💰</span>
