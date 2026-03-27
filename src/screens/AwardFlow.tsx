@@ -5,11 +5,14 @@ import { useStore } from '../store/useStore';
 import Confetti from '../components/Confetti';
 
 const TASKS = [
-  { name: 'Make bed', cookies: 5, icon: '🛏️' },
+  { name: 'Plan your day', cookies: 3, icon: '📋' },
+  { name: 'Morning routine', cookies: 5, icon: '📅' },
+  { name: 'Quick tidy', cookies: 3, icon: '🧹' },
+  { name: 'Drink water', cookies: 2, icon: '💧' },
   { name: 'Do homework', cookies: 15, icon: '📚' },
-  { name: 'Brush teeth', cookies: 3, icon: '🪥' },
-  { name: 'Tidy room', cookies: 10, icon: '🧹' },
   { name: 'Read 20 min', cookies: 10, icon: '📖' },
+  { name: 'Evening routine', cookies: 5, icon: '🌙' },
+  { name: 'Tidy room', cookies: 10, icon: '🏠' },
 ];
 
 type Step = 'select-kid' | 'select-task' | 'confirm';
@@ -52,7 +55,7 @@ export default function AwardFlow() {
   };
 
   return (
-    <div className="min-h-screen px-5 pt-14 pb-8 relative bg-cream">
+    <div className="min-h-screen px-5 pt-14 pb-8 relative bg-bg">
       {showConfetti && <Confetti />}
 
       {/* Header */}
@@ -63,11 +66,11 @@ export default function AwardFlow() {
             else if (step === 'confirm') setStep('select-task');
             else navigate(-1);
           }}
-          className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-warm-gray"
+          className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-ink shadow-sm"
         >
           ←
         </button>
-        <h1 className="text-2xl font-bold text-warm-gray font-heading">Award Cookies</h1>
+        <h1 className="text-2xl font-bold text-ink font-heading">Award Cookies</h1>
       </div>
 
       {/* Step indicators */}
@@ -78,12 +81,12 @@ export default function AwardFlow() {
             <div key={label} className="flex-1">
               <div
                 className={`h-1 rounded-full transition-colors ${
-                  i <= stepIdx ? 'bg-mint' : 'bg-cream-dark'
+                  i <= stepIdx ? 'bg-lavender-dark' : 'bg-surface-dimmer'
                 }`}
               />
               <p
                 className={`text-xs mt-1 ${
-                  i <= stepIdx ? 'text-mint-dark font-semibold' : 'text-warm-gray-lighter'
+                  i <= stepIdx ? 'text-lavender-dark font-semibold' : 'text-ink-faint'
                 }`}
               >
                 {label}
@@ -94,7 +97,6 @@ export default function AwardFlow() {
       </div>
 
       <AnimatePresence mode="wait">
-        {/* Step 1: Select Kid */}
         {step === 'select-kid' && (
           <motion.div
             key="kid"
@@ -105,19 +107,19 @@ export default function AwardFlow() {
             transition={{ duration: 0.2 }}
             className="space-y-3"
           >
-            <p className="text-warm-gray-light text-sm mb-4">Who did a great job?</p>
+            <p className="text-ink-lighter text-sm mb-4">Who did a great job?</p>
             {kids.map((k) => (
               <button
                 key={k.id}
                 onClick={() => handleSelectKid(k.id)}
-                className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 active:scale-[0.98] transition-transform"
+                className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 active:scale-[0.98] transition-transform shadow-sm"
               >
-                <div className="w-12 h-12 rounded-full bg-cream flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-lavender-light flex items-center justify-center">
                   <span className="text-2xl">{k.emoji}</span>
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-warm-gray">{k.name}</p>
-                  <p className="text-sm text-warm-gray-light">
+                  <p className="font-bold text-ink">{k.name}</p>
+                  <p className="text-sm text-ink-lighter">
                     {k.cookieBalance} 🍪 · 🔥 {k.streak} days
                   </p>
                 </div>
@@ -126,7 +128,6 @@ export default function AwardFlow() {
           </motion.div>
         )}
 
-        {/* Step 2: Select Task */}
         {step === 'select-task' && (
           <motion.div
             key="task"
@@ -137,20 +138,22 @@ export default function AwardFlow() {
             transition={{ duration: 0.2 }}
             className="space-y-3"
           >
-            <p className="text-warm-gray-light text-sm mb-4">
+            <p className="text-ink-lighter text-sm mb-4">
               What did {kid?.name} do? {kid?.emoji}
             </p>
             {TASKS.map((task) => (
               <button
                 key={task.name}
                 onClick={() => handleSelectTask(task)}
-                className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 active:scale-[0.98] transition-transform"
+                className="w-full flex items-center gap-4 bg-white rounded-2xl p-4 active:scale-[0.98] transition-transform shadow-sm"
               >
-                <span className="text-2xl">{task.icon}</span>
-                <div className="flex-1 text-left">
-                  <p className="font-bold text-warm-gray">{task.name}</p>
+                <div className="w-10 h-10 rounded-xl bg-surface-dim flex items-center justify-center">
+                  <span className="text-xl">{task.icon}</span>
                 </div>
-                <span className="text-mint-dark font-bold">
+                <div className="flex-1 text-left">
+                  <p className="font-bold text-ink">{task.name}</p>
+                </div>
+                <span className="text-lavender-dark font-bold text-sm">
                   +{task.cookies} 🍪
                 </span>
               </button>
@@ -158,7 +161,6 @@ export default function AwardFlow() {
           </motion.div>
         )}
 
-        {/* Step 3: Confirm */}
         {step === 'confirm' && !showConfetti && (
           <motion.div
             key="confirm"
@@ -177,19 +179,19 @@ export default function AwardFlow() {
             >
               🍪
             </motion.div>
-            <p className="text-lg text-warm-gray-light mb-1">Awarding</p>
-            <p className="text-4xl font-bold text-cookie-dark mb-2 font-heading">
+            <p className="text-lg text-ink-lighter mb-1">Awarding</p>
+            <p className="text-4xl font-bold text-amber-dark mb-2 font-heading">
               {customAmount || selectedTask?.cookies} 🍪
             </p>
-            <p className="text-warm-gray-light text-sm mb-1">
+            <p className="text-ink-lighter text-sm mb-1">
               €{((customAmount ? parseInt(customAmount) : selectedTask?.cookies ?? 0) / 10).toFixed(2)}
             </p>
-            <p className="text-warm-gray mb-6">
+            <p className="text-ink mb-6">
               to {kid?.emoji} {kid?.name} for {selectedTask?.name}
             </p>
 
             <div className="mb-6">
-              <label className="text-xs text-warm-gray-light block mb-2">
+              <label className="text-xs text-ink-lighter block mb-2">
                 Custom amount (optional)
               </label>
               <input
@@ -197,21 +199,20 @@ export default function AwardFlow() {
                 value={customAmount}
                 onChange={(e) => setCustomAmount(e.target.value)}
                 placeholder={String(selectedTask?.cookies)}
-                className="w-24 text-center text-xl font-bold border-2 border-cream-dark rounded-xl px-3 py-2 focus:border-mint focus:outline-none bg-white"
+                className="w-24 text-center text-xl font-bold border-2 border-surface-dimmer rounded-xl px-3 py-2 focus:border-lavender-dark focus:outline-none bg-white"
               />
             </div>
 
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleConfirm}
-              className="w-full bg-mint text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg shadow-mint/25"
+              className="w-full bg-lavender-dark text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg shadow-lavender-dark/25"
             >
               Confirm Award 🎉
             </motion.button>
           </motion.div>
         )}
 
-        {/* Celebration */}
         {showConfetti && (
           <motion.div
             key="celebration"
@@ -219,11 +220,11 @@ export default function AwardFlow() {
             animate={{ scale: 1, opacity: 1 }}
             className="text-center pt-20"
           >
-            <p className="text-6xl mb-4">🎉</p>
-            <p className="text-2xl font-bold text-warm-gray mb-2 font-heading">
+            <p className="text-6xl mb-4 animate-celebrate">🎉</p>
+            <p className="text-2xl font-bold text-ink mb-2 font-heading">
               Great job, {kid?.name}!
             </p>
-            <p className="text-mint-dark font-bold text-lg">
+            <p className="text-lavender-dark font-bold text-lg">
               +{customAmount || selectedTask?.cookies} cookies earned!
             </p>
           </motion.div>

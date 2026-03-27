@@ -1,181 +1,228 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-motion';
-import { useStore } from '../store/useStore';
-import AnimatedCookieCount from '../components/AnimatedCookieCount';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useStore, type TimeSlot } from '../store/useStore';
 import CookieBurst from '../components/CookieBurst';
+import Mascot from '../components/Mascot';
 
-function SwipeTask({
+const TIME_SLOT_CONFIG: Record<TimeSlot, { label: string; emoji: string; bgColor: string; textColor: string }> = {
+  anytime: { label: 'ANYTIME', emoji: '🕐', bgColor: 'bg-surface-dim', textColor: 'text-ink-light' },
+  morning: { label: 'MORNING', emoji: '🌅', bgColor: 'bg-lavender-light', textColor: 'text-lavender-dark' },
+  afternoon: { label: 'AFTERNOON', emoji: '☀️', bgColor: 'bg-peach-light', textColor: 'text-peach-dark' },
+  evening: { label: 'EVENING', emoji: '🌙', bgColor: 'bg-[#E0E7FF]', textColor: 'text-[#4338CA]' },
+};
+
+function TaskCard({
   task,
   onComplete,
 }: {
-  task: { id: string; name: string; cookies: number; completedToday: boolean; icon?: string };
+  task: { id: string; name: string; emoji: string; cookies: number; xp: number; duration: number; completedToday: boolean; subtasks?: { id: string; name: string; done: boolean }[] };
   onComplete: () => void;
 }) {
-  const x = useMotionValue(0);
-  const bg = useTransform(x, [-120, 0], ['#22C55E', '#FFFFFF']);
-  const checkOpacity = useTransform(x, [-120, -60, 0], [1, 0.5, 0]);
-  const constraintsRef = useRef(null);
+  const [expanded, setExpanded] = useState(false);
+  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+  const subtasksDone = task.subtasks?.filter(s => s.done).length ?? 0;
 
   return (
-    <div ref={constraintsRef} className="relative overflow-hidden rounded-2xl">
-      {/* Background reveal */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-end pr-6 rounded-2xl"
-        style={{ backgroundColor: bg }}
-      >
-        <motion.span style={{ opacity: checkOpacity }} className="text-white text-2xl font-bold">
-          ✓ Done!
-        </motion.span>
-      </motion.div>
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-white rounded-2xl px-4 py-3.5 ${task.completedToday ? 'opacity-50' : ''}`}
+    >
+      <div className="flex items-center gap-3">
+        {/* Emoji icon */}
+        <div className="w-10 h-10 rounded-xl bg-surface-dim flex items-center justify-center flex-shrink-0">
+          <span className="text-xl">{task.emoji}</span>
+        </div>
 
-      <motion.div
-        drag="x"
-        dragConstraints={constraintsRef}
-        dragElastic={0.1}
-        style={{ x }}
-        onDragEnd={(_, info) => {
-          if (info.offset.x < -100) onComplete();
-        }}
-        className={`relative flex items-center gap-3 bg-white rounded-2xl px-4 py-4 z-10 ${
-          task.completedToday ? 'opacity-60' : ''
-        }`}
-      >
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <p className={`font-bold text-[15px] ${task.completedToday ? 'line-through text-ink-lighter' : 'text-ink'}`}>
+            {task.name}
+          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs text-ink-lighter">{task.duration}m</span>
+            {hasSubtasks && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="text-xs text-ink-lighter flex items-center gap-0.5"
+              >
+                <span className="bg-surface-dim rounded px-1.5 py-0.5 text-[10px] font-semibold">
+                  {subtasksDone}/{task.subtasks!.length}
+                </span>
+                <svg className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* XP badge */}
+        <span className="text-xs font-bold text-lavender-dark bg-lavender-light px-2 py-1 rounded-full flex-shrink-0">
+          +{task.xp} XP
+        </span>
+
         {/* Circle checkbox */}
-        <div
-          className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+        <button
+          onClick={onComplete}
+          disabled={task.completedToday}
+          className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
             task.completedToday
-              ? 'bg-mint border-mint text-white'
-              : 'border-warm-gray-lighter'
+              ? 'bg-sage border-sage-dark'
+              : 'border-ink-faint hover:border-lavender active:scale-90'
           }`}
         >
           {task.completedToday && (
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M3 7L6 10L11 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 7L6 10L11 4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           )}
-        </div>
+        </button>
+      </div>
 
-        <div className="flex-1 min-w-0">
-          <p
-            className={`font-bold text-[15px] ${
-              task.completedToday ? 'line-through text-warm-gray-light' : 'text-warm-gray'
-            }`}
+      {/* Subtasks expansion */}
+      <AnimatePresence>
+        {expanded && hasSubtasks && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
           >
-            {task.name}
-          </p>
-          <p className="text-xs text-warm-gray-light mt-0.5">
-            ↻ daily
-          </p>
-        </div>
-        <span className="text-mint-dark font-bold text-sm flex-shrink-0">+{task.cookies}🍪</span>
-        {!task.completedToday && (
-          <span className="text-warm-gray-lighter text-[10px] animate-swipe-hint flex-shrink-0">← swipe</span>
+            <div className="mt-3 ml-13 space-y-2 border-t border-surface-dim pt-3">
+              {task.subtasks!.map(sub => (
+                <div key={sub.id} className="flex items-center gap-2">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${sub.done ? 'bg-sage border-sage-dark' : 'border-ink-faint'}`}>
+                    {sub.done && <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M3 7L6 10L11 4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                  </div>
+                  <span className={`text-sm ${sub.done ? 'line-through text-ink-lighter' : 'text-ink-light'}`}>{sub.name}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         )}
-      </motion.div>
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
 export default function KidCookieJar() {
-  const navigate = useNavigate();
   const { kids, activeKidId, completeTask } = useStore();
   const kid = kids.find((k) => k.id === activeKidId) ?? kids[0];
   const [burst, setBurst] = useState<string | null>(null);
 
   const handleComplete = (taskId: string) => {
+    if (kid.tasks.find(t => t.id === taskId)?.completedToday) return;
     completeTask(kid.id, taskId);
     setBurst(taskId);
     setTimeout(() => setBurst(null), 800);
   };
 
   const completedCount = kid.tasks.filter((t) => t.completedToday).length;
-  const allDone = completedCount === kid.tasks.length;
+  const totalTasks = kid.tasks.length;
+
+  // Group tasks by time slot
+  const grouped = (['anytime', 'morning', 'afternoon', 'evening'] as TimeSlot[]).map(slot => ({
+    slot,
+    tasks: kid.tasks.filter(t => t.timeSlot === slot),
+  })).filter(g => g.tasks.length > 0);
+
+  // Get the current day name
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  // Mascot encouragement messages
+  const getMascotMessage = () => {
+    if (completedCount === totalTasks) return 'All done! Amazing! 🌟';
+    if (completedCount > totalTasks / 2) return `${totalTasks - completedCount} more to go! 💪`;
+    if (completedCount > 0) return 'Great start! Keep going!';
+    return "Let's do this! 🎯";
+  };
 
   return (
-    <div className="min-h-screen pb-24 bg-cream">
+    <div className="min-h-screen pb-24 bg-bg">
       <AnimatePresence>
         {burst && <CookieBurst originX={50} originY={30} />}
       </AnimatePresence>
 
-      {/* Header bar */}
-      <div className="bg-mint px-5 pt-14 pb-6 rounded-b-[28px]">
-        <div className="flex items-center justify-center mb-5">
-          <p className="text-white/80 font-semibold text-sm font-heading">{kid.emoji} {kid.name}'s Cookie Jar</p>
-        </div>
-
-        {/* Hero balance */}
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', bounce: 0.4 }}
-            className="text-5xl mb-2"
-          >
-            🍪
-          </motion.div>
-          <AnimatedCookieCount
-            value={kid.cookieBalance}
-            className="text-4xl font-extrabold text-white block"
-            showEuro
-            duration={1200}
-          />
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
-              🔥 {kid.streak} day streak
-            </span>
-            {kid.depositBalance > 0 && (
-              <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
-                📈 {kid.depositBalance} saved
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Today's tasks */}
-      <div className="px-5 mt-6 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-warm-gray-light uppercase tracking-wider">
-            Today's Tasks
-          </h3>
-          <span className="text-xs font-semibold text-mint-dark">
-            {completedCount}/{kid.tasks.length} done
+      {/* Top bar */}
+      <div className="px-5 pt-14 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="bg-surface-dim rounded-full px-3 py-1.5 text-xs font-bold text-ink-light flex items-center gap-1">
+            🎉 {completedCount} / {totalTasks}
           </span>
         </div>
-
-        {allDone ? (
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-center py-10 bg-mint-light rounded-3xl"
-          >
-            <p className="text-4xl mb-2">🌟</p>
-            <p className="font-bold text-mint-dark text-lg">All tasks complete!</p>
-            <p className="text-sm text-warm-gray-light">Amazing work today!</p>
-          </motion.div>
-        ) : (
-          <div className="space-y-2">
-            {kid.tasks.map((task) => (
-              <SwipeTask
-                key={task.id}
-                task={task}
-                onComplete={() => handleComplete(task.id)}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <span className="bg-lavender-light rounded-full px-3 py-1.5 text-xs font-bold text-lavender-dark">
+            ⚡ {kid.xp} XP
+          </span>
+          <span className="bg-amber-light rounded-full px-3 py-1.5 text-xs font-bold text-amber-dark">
+            🔥 {kid.streak}
+          </span>
+        </div>
       </div>
 
-      {/* Redeem CTA */}
-      <div className="px-5">
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('redeem')}
-          className="w-full bg-mint text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg shadow-mint/25"
+      {/* Day header */}
+      <div className="px-5 pt-4 pb-6 flex items-center justify-between">
+        <div>
+          <button className="text-ink-lighter text-lg">‹</button>
+        </div>
+        <div className="text-center">
+          <h1 className="text-3xl font-bold font-heading text-ink">{dayName}</h1>
+          <p className="text-sm text-ink-lighter">{dateStr}</p>
+        </div>
+        <div>
+          <button className="text-ink-lighter text-lg">›</button>
+        </div>
+      </div>
+
+      {/* Task groups */}
+      <div className="px-5 space-y-6">
+        {grouped.map(({ slot, tasks }) => {
+          const config = TIME_SLOT_CONFIG[slot];
+          return (
+            <div key={slot}>
+              {/* Section header pill */}
+              <div className="flex items-center justify-between mb-3">
+                <span className={`inline-flex items-center gap-1.5 ${config.bgColor} ${config.textColor} text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full`}>
+                  <span>{config.emoji}</span>
+                  {config.label} ({tasks.length})
+                </span>
+                <button className="w-7 h-7 rounded-full bg-surface-dim flex items-center justify-center text-ink-lighter text-sm">+</button>
+              </div>
+
+              {/* Anytime placeholder if empty */}
+              {slot === 'anytime' && tasks.length === 0 ? null : (
+                <div className="space-y-2">
+                  {tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onComplete={() => handleComplete(task.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* All done celebration */}
+      {completedCount === totalTasks && totalTasks > 0 && (
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="mx-5 mt-6 text-center py-10 bg-sage-light rounded-3xl border-2 border-sage"
         >
-          Redeem Cookies 🎁
-        </motion.button>
+          <p className="text-4xl mb-2 animate-celebrate">🌟</p>
+          <p className="font-bold text-sage-dark text-lg font-heading">All tasks complete!</p>
+          <p className="text-sm text-ink-lighter">Amazing work today, {kid.name}!</p>
+        </motion.div>
+      )}
+
+      {/* Mascot */}
+      <div className="fixed bottom-24 right-4 z-30">
+        <Mascot message={getMascotMessage()} size="md" />
       </div>
     </div>
   );
