@@ -318,17 +318,17 @@ export default function KidCookieJar() {
               >
                 <motion.button
                   whileTap={{ scale: 0.96 }}
-                  onClick={handleConfirmYes}
-                  className="flex-[1.3] bg-ink text-white font-bold py-4 rounded-full text-base"
-                >
-                  yes, done! 🎉
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
                   onClick={() => setConfirmTask(null)}
                   className="flex-1 bg-white border-2 border-surface-dimmer text-ink font-bold py-4 rounded-full text-base"
                 >
                   not yet
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleConfirmYes}
+                  className="flex-[1.3] bg-ink text-white font-bold py-4 rounded-full text-base"
+                >
+                  yes, done! 🎉
                 </motion.button>
               </motion.div>
             </motion.div>
