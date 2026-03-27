@@ -48,7 +48,7 @@ export default function RedeemScreen() {
             : 'Earning 5% bonus/month!'}
         </p>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('..')}
           className="bg-cream-dark text-warm-gray font-bold px-8 py-3 rounded-2xl"
         >
           Back to Cookie Jar
@@ -58,11 +58,11 @@ export default function RedeemScreen() {
   }
 
   return (
-    <div className="min-h-screen px-5 pt-14 pb-8 bg-cream">
+    <div className="min-h-screen px-5 pt-14 pb-24 bg-cream">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
-          onClick={() => (mode === 'choose' ? navigate(-1) : setMode('choose'))}
+          onClick={() => (mode === 'choose' ? navigate('..') : setMode('choose'))}
           className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-warm-gray"
         >
           ←

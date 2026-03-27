@@ -29,11 +29,11 @@ export default function MyDeposit() {
   };
 
   return (
-    <div className="min-h-screen pb-8 bg-cream">
+    <div className="min-h-screen pb-24 bg-cream">
       {/* Header */}
       <div className="px-5 pt-14 pb-2 flex items-center gap-3">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('..')}
           className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-warm-gray"
         >
           ←

@@ -79,7 +79,7 @@ function SwipeTask({
 
 export default function KidCookieJar() {
   const navigate = useNavigate();
-  const { kids, activeKidId, completeTask, setViewMode } = useStore();
+  const { kids, activeKidId, completeTask } = useStore();
   const kid = kids.find((k) => k.id === activeKidId) ?? kids[0];
   const [burst, setBurst] = useState<string | null>(null);
 
@@ -100,18 +100,8 @@ export default function KidCookieJar() {
 
       {/* Header bar */}
       <div className="bg-mint px-5 pt-14 pb-6 rounded-b-[28px]">
-        <div className="flex items-center justify-between mb-5">
-          <button
-            onClick={() => {
-              setViewMode('parent');
-              navigate('/');
-            }}
-            className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white"
-          >
-            ←
-          </button>
+        <div className="flex items-center justify-center mb-5">
           <p className="text-white/80 font-semibold text-sm font-heading">{kid.emoji} {kid.name}'s Cookie Jar</p>
-          <div className="w-9" />
         </div>
 
         {/* Hero balance */}
@@ -181,7 +171,7 @@ export default function KidCookieJar() {
       <div className="px-5">
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/redeem')}
+          onClick={() => navigate('redeem')}
           className="w-full bg-mint text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg shadow-mint/25"
         >
           Redeem Cookies 🎁

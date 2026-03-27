@@ -1,14 +1,16 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-
-const tabs = [
-  { path: '/jar', label: 'My Jar', icon: '🍪' },
-  { path: '/redeem', label: 'Redeem', icon: '🎁' },
-  { path: '/deposit', label: 'Deposit', icon: '📈' },
-];
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
 export default function KidBottomNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { kidName } = useParams();
+  const base = `/kid/${kidName}`;
+
+  const tabs = [
+    { path: base, label: 'My Jar', icon: '🍪' },
+    { path: `${base}/redeem`, label: 'Redeem', icon: '🎁' },
+    { path: `${base}/deposit`, label: 'Deposit', icon: '📈' },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-white/90 backdrop-blur-md border-t border-cream-dark z-40">

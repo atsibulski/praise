@@ -72,11 +72,7 @@ export default function ParentDashboard() {
                 Award Cookies 🍪
               </button>
               <button
-                onClick={() => {
-                  useStore.getState().setActiveKid(kid.id);
-                  setViewMode('kid');
-                  navigate('/jar');
-                }}
+                onClick={() => navigate(`/kid/${kid.name.toLowerCase()}`)}
                 className="px-5 bg-cream text-warm-gray font-semibold py-3 rounded-2xl text-sm active:scale-95 transition-transform"
               >
                 View
