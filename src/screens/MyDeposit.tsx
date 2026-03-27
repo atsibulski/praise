@@ -1,8 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -97,7 +95,7 @@ export default function MyDeposit() {
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                     fontSize: 12,
                   }}
-                  formatter={(value: number) => [`${value} 🍪 (€${(value / 10).toFixed(2)})`, 'Balance']}
+                  formatter={(value) => [`${value} 🍪 (€${(Number(value) / 10).toFixed(2)})`, 'Balance']}
                 />
                 <Area
                   type="monotone"
