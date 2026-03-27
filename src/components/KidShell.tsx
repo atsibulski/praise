@@ -7,16 +7,14 @@ export default function KidShell() {
   const { kidName } = useParams();
   const kids = useStore((s) => s.kids);
   const setActiveKid = useStore((s) => s.setActiveKid);
-  const setViewMode = useStore((s) => s.setViewMode);
 
   const kid = kids.find((k) => k.name.toLowerCase() === kidName?.toLowerCase());
 
   useEffect(() => {
     if (kid) {
       setActiveKid(kid.id);
-      setViewMode('kid');
     }
-  }, [kid, setActiveKid, setViewMode]);
+  }, [kid, setActiveKid]);
 
   if (!kid) return <Navigate to="/" replace />;
 

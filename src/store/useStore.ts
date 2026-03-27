@@ -35,7 +35,7 @@ export interface Kid {
   weeklyGrowth: number[];
 }
 
-export type ViewMode = 'locked' | 'parent' | 'kid';
+export type ViewMode = 'choose' | 'parent' | 'kid';
 
 interface StoreState {
   kids: Kid[];
@@ -106,7 +106,7 @@ export const useStore = create<StoreState>((set) => ({
     },
   ],
   activeKidId: null,
-  viewMode: 'locked',
+  viewMode: 'choose',
   activity: [
     {
       id: uid(),

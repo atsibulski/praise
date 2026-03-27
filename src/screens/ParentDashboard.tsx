@@ -14,23 +14,15 @@ function timeAgo(ts: number) {
 }
 
 export default function ParentDashboard() {
-  const { kids, activity, setViewMode } = useStore();
+  const { kids, activity } = useStore();
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen pb-8 bg-cream">
       {/* Header */}
-      <div className="px-5 pt-14 pb-5 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-warm-gray font-heading">Praise</h1>
-          <p className="text-sm text-warm-gray-light">Parent Dashboard</p>
-        </div>
-        <button
-          onClick={() => setViewMode('locked')}
-          className="text-xs bg-cream-dark text-warm-gray-light px-3 py-1.5 rounded-full font-semibold"
-        >
-          Lock 🔒
-        </button>
+      <div className="px-5 pt-14 pb-5">
+        <h1 className="text-2xl font-bold text-warm-gray font-heading">Praise</h1>
+        <p className="text-sm text-warm-gray-light">Parent Dashboard</p>
       </div>
 
       {/* Kid cards */}
