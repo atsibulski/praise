@@ -291,38 +291,79 @@ export default function ParentDashboard() {
                 className="w-full bg-surface-dim rounded-xl px-4 py-3 text-ink font-semibold mb-3 focus:outline-none focus:ring-2 focus:ring-lavender"
               />
 
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <div>
-                  <label className="text-xs text-ink-lighter block mb-1">Cookies</label>
-                  <input type="number" value={taskCookies} onChange={e => setTaskCookies(+e.target.value)} className="w-full bg-surface-dim rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-ink-lighter block mb-1">XP</label>
-                  <input type="number" value={taskXp} onChange={e => setTaskXp(+e.target.value)} className="w-full bg-surface-dim rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-ink-lighter block mb-1">Minutes</label>
-                  <input type="number" value={taskDuration} onChange={e => setTaskDuration(+e.target.value)} className="w-full bg-surface-dim rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none" />
+              {/* Stepper controls */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {([
+                  { label: 'Cookies', icon: '🍪', value: taskCookies, set: setTaskCookies, step: 1, min: 1 },
+                  { label: 'XP', icon: '⚡', value: taskXp, set: setTaskXp, step: 5, min: 5 },
+                  { label: 'Minutes', icon: '⏱️', value: taskDuration, set: setTaskDuration, step: 5, min: 5 },
+                ] as const).map(({ label, icon, value, set, step, min }) => (
+                  <div key={label} className="flex flex-col items-center">
+                    <button
+                      onClick={() => set(value + step)}
+                      className="w-12 h-12 rounded-xl bg-surface-dim flex items-center justify-center text-ink-light text-2xl font-light active:bg-surface-dimmer transition-colors"
+                    >
+                      +
+                    </button>
+                    <span className="text-2xl mt-1">{icon}</span>
+                    <p className="text-xs text-ink-lighter mt-0.5">{label}</p>
+                    <p className="text-xl font-bold text-ink">{value}</p>
+                    <button
+                      onClick={() => set(Math.max(min, value - step))}
+                      className="w-12 h-12 rounded-xl bg-surface-dim flex items-center justify-center text-ink-light text-2xl font-light active:bg-surface-dimmer transition-colors mt-1"
+                    >
+                      −
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Time slot pills */}
+              <div className="mb-3">
+                <label className="text-xs text-ink-lighter block mb-2">Time slot</label>
+                <div className="flex gap-1.5">
+                  {([
+                    { value: 'morning' as TimeSlot, label: '🌅 Morning' },
+                    { value: 'afternoon' as TimeSlot, label: '☀️ Afternoon' },
+                    { value: 'evening' as TimeSlot, label: '🌙 Evening' },
+                    { value: 'anytime' as TimeSlot, label: '🕐 Any' },
+                  ]).map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setTaskSlot(opt.value)}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                        taskSlot === opt.value
+                          ? 'bg-lavender-dark text-white'
+                          : 'bg-surface-dim text-ink-light'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                <div>
-                  <label className="text-xs text-ink-lighter block mb-1">Time slot</label>
-                  <select value={taskSlot} onChange={e => setTaskSlot(e.target.value as TimeSlot)} className="w-full bg-surface-dim rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none">
-                    <option value="morning">🌅 Morning</option>
-                    <option value="afternoon">☀️ Afternoon</option>
-                    <option value="evening">🌙 Evening</option>
-                    <option value="anytime">🕐 Anytime</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-ink-lighter block mb-1">Priority</label>
-                  <select value={taskPriority} onChange={e => setTaskPriority(e.target.value as Priority)} className="w-full bg-surface-dim rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none">
-                    <option value="high">▲ High</option>
-                    <option value="medium">● Medium</option>
-                    <option value="low">▼ Low</option>
-                  </select>
+              {/* Priority pills */}
+              <div className="mb-5">
+                <label className="text-xs text-ink-lighter block mb-2">Priority</label>
+                <div className="flex gap-1.5">
+                  {([
+                    { value: 'high' as Priority, label: '▲ High', activeBg: 'bg-coral-dark', activeTxt: 'text-white' },
+                    { value: 'medium' as Priority, label: '● Medium', activeBg: 'bg-peach-dark', activeTxt: 'text-white' },
+                    { value: 'low' as Priority, label: '▼ Low', activeBg: 'bg-lavender-dark', activeTxt: 'text-white' },
+                  ]).map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setTaskPriority(opt.value)}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                        taskPriority === opt.value
+                          ? `${opt.activeBg} ${opt.activeTxt}`
+                          : 'bg-surface-dim text-ink-light'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -399,9 +440,28 @@ export default function ParentDashboard() {
                 className="w-full bg-surface-dim rounded-xl px-4 py-3 text-ink text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-lavender"
               />
 
-              <div className="mb-4">
-                <label className="text-xs text-ink-lighter block mb-1">XP Cost</label>
-                <input type="number" value={rewardCost} onChange={e => setRewardCost(+e.target.value)} className="w-full bg-surface-dim rounded-xl px-4 py-3 text-ink font-semibold focus:outline-none" />
+              {/* XP Cost stepper */}
+              <div className="mb-5">
+                <label className="text-xs text-ink-lighter block mb-2">XP Cost</label>
+                <div className="flex items-center justify-center gap-4 bg-surface-dim rounded-2xl py-3 px-4">
+                  <button
+                    onClick={() => setRewardCost(Math.max(10, rewardCost - 10))}
+                    className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-ink-light text-2xl font-light active:bg-surface-dimmer transition-colors shadow-sm"
+                  >
+                    −
+                  </button>
+                  <div className="flex-1 text-center">
+                    <span className="text-2xl">⚡</span>
+                    <p className="text-3xl font-bold text-ink">{rewardCost}</p>
+                    <p className="text-xs text-ink-lighter">XP</p>
+                  </div>
+                  <button
+                    onClick={() => setRewardCost(rewardCost + 10)}
+                    className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-ink-light text-2xl font-light active:bg-surface-dimmer transition-colors shadow-sm"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
 
               <motion.button
