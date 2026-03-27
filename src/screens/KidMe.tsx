@@ -207,15 +207,15 @@ export default function KidMe() {
           </div>
         </div>
 
-        {/* Rewards Shop CTA */}
+        {/* My Money CTA */}
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => navigate('rewards')}
-          className="w-full bg-gradient-to-r from-lavender to-lavender-dark text-white font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2"
+          onClick={() => navigate('vault')}
+          className="w-full bg-gradient-to-r from-amber-dark to-[#F59E0B] text-white font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2"
         >
-          <span className="text-lg">🎁</span>
-          Rewards Shop
-          <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">{kid.xp} XP</span>
+          <span className="text-lg">💰</span>
+          My Money
+          <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">{kid.cookieBalance + kid.vaultBalance} 🪙</span>
         </motion.button>
 
         {/* Learn how to section */}

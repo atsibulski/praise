@@ -16,7 +16,7 @@ function timeAgo(ts: number) {
 }
 
 export default function ParentDashboard() {
-  const { kids, activity, addTask, addReward } = useStore();
+  const { kids, activity, addTask, addReward, approveCashOut, denyCashOut, updateFinancialSettings } = useStore();
   const navigate = useNavigate();
   const [showAddTask, setShowAddTask] = useState(false);
   const [showAddReward, setShowAddReward] = useState(false);
@@ -182,6 +182,121 @@ export default function ParentDashboard() {
               <p className="text-xs text-ink-lighter">Set up a reward</p>
             </div>
           </motion.button>
+        </div>
+      </div>
+
+      {/* Pending Cash-Out Requests */}
+      {kids.some(k => k.cashOutRequests.some(r => r.status === 'pending')) && (
+        <div className="px-5 mb-6">
+          <h3 className="text-xs font-bold text-ink-lighter uppercase tracking-wider mb-3">Pending Cash-Out Requests</h3>
+          <div className="space-y-2">
+            {kids.flatMap(kid =>
+              kid.cashOutRequests
+                .filter(r => r.status === 'pending')
+                .map(req => (
+                  <div key={req.id} className="bg-white rounded-2xl p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{kid.emoji}</span>
+                        <span className="font-bold text-ink">{kid.name}</span>
+                      </div>
+                      <span className="text-xs bg-amber-light text-amber-dark px-2 py-0.5 rounded-full font-semibold">⏳ Pending</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-sm text-ink-lighter">{req.cookies} coins</p>
+                        <p className="text-lg font-bold text-ink">${req.realAmount.toFixed(2)}</p>
+                      </div>
+                      <p className="text-xs text-ink-lighter">{new Date(req.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => approveCashOut(kid.id, req.id)}
+                        className="flex-1 bg-sage-dark text-white font-bold py-2.5 rounded-xl text-sm"
+                      >
+                        Approve ✓
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => denyCashOut(kid.id, req.id)}
+                        className="flex-1 bg-coral-light text-coral-dark font-bold py-2.5 rounded-xl text-sm"
+                      >
+                        Deny
+                      </motion.button>
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Financial Settings */}
+      <div className="px-5 mb-6">
+        <h3 className="text-xs font-bold text-ink-lighter uppercase tracking-wider mb-3">Financial Settings</h3>
+        <div className="space-y-3">
+          {kids.map(kid => (
+            <div key={kid.id} className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">{kid.emoji}</span>
+                <span className="font-bold text-ink">{kid.name}</span>
+                <span className="text-xs text-ink-lighter ml-auto">🏦 {kid.vaultBalance} saved · 💳 {kid.cookieBalance} spendable</span>
+              </div>
+
+              {/* Rate controls */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="bg-surface-dim rounded-xl p-3">
+                  <p className="text-[10px] text-ink-lighter font-bold uppercase mb-1">Coins per $1</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateFinancialSettings(kid.id, { conversionRate: Math.max(10, kid.financialSettings.conversionRate - 10) })}
+                      className="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-ink-light text-sm font-bold active:bg-surface-dimmer"
+                    >−</button>
+                    <span className="flex-1 text-center font-bold text-ink">{kid.financialSettings.conversionRate}</span>
+                    <button
+                      onClick={() => updateFinancialSettings(kid.id, { conversionRate: kid.financialSettings.conversionRate + 10 })}
+                      className="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-ink-light text-sm font-bold active:bg-surface-dimmer"
+                    >+</button>
+                  </div>
+                </div>
+                <div className="bg-surface-dim rounded-xl p-3">
+                  <p className="text-[10px] text-ink-lighter font-bold uppercase mb-1">Weekly Interest</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateFinancialSettings(kid.id, { interestRate: Math.max(0.01, +(kid.financialSettings.interestRate - 0.01).toFixed(2)) })}
+                      className="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-ink-light text-sm font-bold active:bg-surface-dimmer"
+                    >−</button>
+                    <span className="flex-1 text-center font-bold text-ink">{(kid.financialSettings.interestRate * 100).toFixed(0)}%</span>
+                    <button
+                      onClick={() => updateFinancialSettings(kid.id, { interestRate: +(kid.financialSettings.interestRate + 0.01).toFixed(2) })}
+                      className="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-ink-light text-sm font-bold active:bg-surface-dimmer"
+                    >+</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature toggles */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => updateFinancialSettings(kid.id, { cashOutEnabled: !kid.financialSettings.cashOutEnabled })}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${
+                    kid.financialSettings.cashOutEnabled ? 'bg-sage-light text-sage-dark' : 'bg-surface-dim text-ink-lighter'
+                  }`}
+                >
+                  🐷 Cash Out {kid.financialSettings.cashOutEnabled ? 'ON' : 'OFF'}
+                </button>
+                <button
+                  onClick={() => updateFinancialSettings(kid.id, { investEnabled: !kid.financialSettings.investEnabled })}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${
+                    kid.financialSettings.investEnabled ? 'bg-sage-light text-sage-dark' : 'bg-surface-dim text-ink-lighter'
+                  }`}
+                >
+                  🌱 Vault {kid.financialSettings.investEnabled ? 'ON' : 'OFF'}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -440,9 +555,9 @@ export default function ParentDashboard() {
                 className="w-full bg-surface-dim rounded-xl px-4 py-3 text-ink text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-lavender"
               />
 
-              {/* XP Cost stepper */}
+              {/* Coin Cost stepper */}
               <div className="mb-5">
-                <label className="text-xs text-ink-lighter block mb-2">XP Cost</label>
+                <label className="text-xs text-ink-lighter block mb-2">Coin Cost</label>
                 <div className="flex items-center justify-center gap-4 bg-surface-dim rounded-2xl py-3 px-4">
                   <button
                     onClick={() => setRewardCost(Math.max(10, rewardCost - 10))}
@@ -451,9 +566,9 @@ export default function ParentDashboard() {
                     −
                   </button>
                   <div className="flex-1 text-center">
-                    <span className="text-2xl">⚡</span>
+                    <span className="text-2xl">🪙</span>
                     <p className="text-3xl font-bold text-ink">{rewardCost}</p>
-                    <p className="text-xs text-ink-lighter">XP</p>
+                    <p className="text-xs text-ink-lighter">coins</p>
                   </div>
                   <button
                     onClick={() => setRewardCost(rewardCost + 10)}

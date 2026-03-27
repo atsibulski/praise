@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useStore, LEVEL_EMOJI } from '../store/useStore';
+import { useStore } from '../store/useStore';
 import Confetti from '../components/Confetti';
 import Mascot from '../components/Mascot';
 
@@ -13,7 +13,7 @@ export default function KidRewards() {
 
   const handleRedeem = (rewardId: string) => {
     const reward = kid.rewards.find(r => r.id === rewardId);
-    if (!reward || reward.redeemed || kid.xp < reward.cost) return;
+    if (!reward || reward.redeemed || kid.cookieBalance < reward.cost) return;
     redeemReward(kid.id, rewardId);
     setShowConfetti(true);
     setTimeout(() => {
@@ -37,18 +37,18 @@ export default function KidRewards() {
           ←
         </button>
         <h1 className="text-2xl font-bold font-heading text-ink flex-1">Rewards Shop</h1>
-        <span className="bg-lavender-light rounded-full px-3 py-1.5 text-xs font-bold text-lavender-dark">
-          ⚡ {kid.xp} XP
+        <span className="bg-amber-light rounded-full px-3 py-1.5 text-xs font-bold text-amber-dark">
+          {kid.cookieBalance} 🪙
         </span>
       </div>
 
-      {/* Level badge */}
+      {/* Coin balance hint */}
       <div className="px-5 mt-4 mb-6">
-        <div className="bg-gradient-to-r from-lavender-light to-lavender/30 rounded-2xl p-4 flex items-center gap-3">
-          <span className="text-3xl">{LEVEL_EMOJI[kid.level]}</span>
+        <div className="bg-gradient-to-r from-amber-light to-amber/30 rounded-2xl p-4 flex items-center gap-3">
+          <span className="text-3xl">🪙</span>
           <div>
-            <p className="font-bold text-ink capitalize">{kid.level} Level</p>
-            <p className="text-xs text-ink-lighter">Earn XP by completing tasks!</p>
+            <p className="font-bold text-ink">{kid.cookieBalance} coins available</p>
+            <p className="text-xs text-ink-lighter">Earn coins by completing tasks!</p>
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function KidRewards() {
       <div className="px-5 space-y-3">
         <h3 className="text-xs font-bold text-ink-lighter uppercase tracking-wider">Available Rewards</h3>
         {available.map((reward, i) => {
-          const canAfford = kid.xp >= reward.cost;
+          const canAfford = kid.cookieBalance >= reward.cost;
           return (
             <motion.div
               key={reward.id}
@@ -83,7 +83,7 @@ export default function KidRewards() {
                     : 'bg-surface-dim text-ink-lighter'
                 }`}
               >
-                {reward.cost} XP
+                {reward.cost} 🪙
               </motion.button>
             </motion.div>
           );

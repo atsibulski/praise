@@ -8,6 +8,9 @@ import KidTodo from './screens/KidTodo';
 import KidFocus from './screens/KidFocus';
 import KidMe from './screens/KidMe';
 import KidRewards from './screens/KidRewards';
+import KidVault from './screens/KidVault';
+import KidInvest from './screens/KidInvest';
+import KidCashOut from './screens/KidCashOut';
 import RedeemScreen from './screens/RedeemScreen';
 import MyDeposit from './screens/MyDeposit';
 
@@ -30,6 +33,9 @@ export default function App() {
           <Route path="focus" element={<KidFocus />} />
           <Route path="me" element={<KidMe />} />
           <Route path="rewards" element={<KidRewards />} />
+          <Route path="vault" element={<KidVault />} />
+          <Route path="invest" element={<KidInvest />} />
+          <Route path="cashout" element={<KidCashOut />} />
           <Route path="redeem" element={<RedeemScreen />} />
           <Route path="deposit" element={<MyDeposit />} />
         </Route>

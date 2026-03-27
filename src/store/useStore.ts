@@ -9,7 +9,7 @@ export interface Task {
   emoji: string;
   cookies: number;
   xp: number;
-  duration: number; // minutes
+  duration: number;
   timeSlot: TimeSlot;
   priority: Priority;
   completedToday: boolean;
@@ -20,7 +20,7 @@ export interface Reward {
   id: string;
   name: string;
   emoji: string;
-  cost: number; // XP cost
+  cost: number; // cookie cost
   description: string;
   redeemed: boolean;
 }
@@ -34,10 +34,26 @@ export interface Achievement {
   unlockedAt?: number;
 }
 
+export interface CashOutRequest {
+  id: string;
+  cookies: number;
+  realAmount: number;
+  status: 'pending' | 'approved' | 'denied';
+  createdAt: number;
+  resolvedAt?: number;
+}
+
+export interface VaultEntry {
+  id: string;
+  cookies: number;
+  date: number;
+  type: 'deposit' | 'interest' | 'withdrawal';
+}
+
 export interface ActivityItem {
   id: string;
   kidId: string;
-  type: 'award' | 'redeem' | 'invest' | 'achievement';
+  type: 'award' | 'redeem' | 'invest' | 'achievement' | 'cashout' | 'interest';
   description: string;
   cookies: number;
   timestamp: number;
@@ -52,6 +68,14 @@ export interface DepositEntry {
 
 export type Level = 'bronze' | 'silver' | 'gold' | 'diamond';
 
+export interface FinancialSettings {
+  conversionRate: number;     // cookies per $1 (e.g. 100)
+  interestRate: number;       // weekly rate as decimal (e.g. 0.02 = 2%)
+  lockInWeeks: number;        // min weeks before withdrawal
+  cashOutEnabled: boolean;
+  investEnabled: boolean;
+}
+
 export interface Kid {
   id: string;
   name: string;
@@ -65,9 +89,18 @@ export interface Kid {
   tasks: Task[];
   rewards: Reward[];
   achievements: Achievement[];
+  // Vault / financial
+  vaultBalance: number;
+  totalInterestEarned: number;
+  lastInterestDate: number;
+  vaultHistory: VaultEntry[];
+  cashOutRequests: CashOutRequest[];
+  financialSettings: FinancialSettings;
+  // Legacy compat
   depositBalance: number;
   depositHistory: DepositEntry[];
   weeklyGrowth: number[];
+  // Profile
   moodLog: { day: string; emoji: string }[];
   totalDaysPlanned: number;
 }
@@ -90,6 +123,14 @@ interface StoreState {
   addTask: (kidId: string, task: Omit<Task, 'completedToday'>) => void;
   addReward: (kidId: string, reward: Omit<Reward, 'redeemed'>) => void;
   logMood: (kidId: string, day: string, emoji: string) => void;
+  // Vault actions
+  depositToVault: (kidId: string, cookies: number) => void;
+  withdrawFromVault: (kidId: string, cookies: number) => void;
+  requestCashOut: (kidId: string, cookies: number) => void;
+  approveCashOut: (kidId: string, requestId: string) => void;
+  denyCashOut: (kidId: string, requestId: string) => void;
+  creditInterest: (kidId: string) => void;
+  updateFinancialSettings: (kidId: string, settings: Partial<FinancialSettings>) => void;
 }
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -143,7 +184,17 @@ const DEFAULT_ACHIEVEMENTS: Omit<Achievement, 'unlocked' | 'unlockedAt'>[] = [
   { id: 'xp-500', name: 'XP Legend', emoji: '🏆', description: 'Earn 500 total XP' },
   { id: 'all-done', name: 'Perfect Day', emoji: '🌟', description: 'Complete all tasks in a day' },
   { id: 'first-reward', name: 'Reward Time!', emoji: '🎁', description: 'Redeem your first reward' },
+  { id: 'first-invest', name: 'Smart Saver', emoji: '🌱', description: 'Make your first vault deposit' },
+  { id: 'vault-100', name: 'Vault Pro', emoji: '🏦', description: 'Save 100 coins in your vault' },
 ];
+
+const DEFAULT_FINANCIAL: FinancialSettings = {
+  conversionRate: 100,  // 100 cookies = $1
+  interestRate: 0.02,   // 2% per week
+  lockInWeeks: 2,
+  cashOutEnabled: true,
+  investEnabled: true,
+};
 
 const generateWeeklyGrowth = (invested: number): number[] => {
   const weeks: number[] = [];
@@ -173,91 +224,66 @@ function checkAchievements(kid: Kid): Kid {
   if (kid.streak >= 30) unlock('streak-30');
   if (kid.totalXp >= 100) unlock('xp-100');
   if (kid.totalXp >= 500) unlock('xp-500');
+  if (kid.vaultBalance > 0) unlock('first-invest');
+  if (kid.vaultBalance >= 100) unlock('vault-100');
 
   return updated;
 }
 
+function createKid(id: string, name: string, emoji: string, cookies: number, xp: number, streak: number, longestStreak: number, vaultBalance: number, unlockedCount: number, totalDays: number): Kid {
+  return {
+    id,
+    name,
+    emoji,
+    cookieBalance: cookies,
+    xp,
+    totalXp: xp,
+    level: getLevel(xp),
+    streak,
+    longestStreak,
+    tasks: DEFAULT_TASKS.map(t => ({ ...t, completedToday: false })),
+    rewards: DEFAULT_REWARDS.map(r => ({ ...r, redeemed: false })),
+    achievements: DEFAULT_ACHIEVEMENTS.map((a, i) => ({
+      ...a,
+      unlocked: i < unlockedCount,
+      unlockedAt: i < unlockedCount ? Date.now() - (unlockedCount - i) * 86400000 : undefined,
+    })),
+    vaultBalance,
+    totalInterestEarned: Math.round(vaultBalance * 0.06),
+    lastInterestDate: Date.now() - 3 * 86400000,
+    vaultHistory: vaultBalance > 0 ? [
+      { id: uid(), cookies: Math.round(vaultBalance * 0.7), date: Date.now() - 14 * 86400000, type: 'deposit' as const },
+      { id: uid(), cookies: Math.round(vaultBalance * 0.04), date: Date.now() - 7 * 86400000, type: 'interest' as const },
+      { id: uid(), cookies: Math.round(vaultBalance * 0.3), date: Date.now() - 2 * 86400000, type: 'deposit' as const },
+      { id: uid(), cookies: Math.round(vaultBalance * 0.02), date: Date.now() - 1 * 86400000, type: 'interest' as const },
+    ] : [],
+    cashOutRequests: id === 'emma' ? [
+      { id: uid(), cookies: 50, realAmount: 0.50, status: 'approved' as const, createdAt: Date.now() - 5 * 86400000, resolvedAt: Date.now() - 4 * 86400000 },
+    ] : [],
+    financialSettings: { ...DEFAULT_FINANCIAL },
+    depositBalance: vaultBalance,
+    depositHistory: vaultBalance > 0 ? [
+      { id: uid(), cookies: Math.round(vaultBalance * 0.7), date: Date.now() - 14 * 86400000, type: 'deposit' as const },
+      { id: uid(), cookies: Math.round(vaultBalance * 0.04), date: Date.now() - 7 * 86400000, type: 'bonus' as const },
+    ] : [],
+    weeklyGrowth: generateWeeklyGrowth(vaultBalance),
+    moodLog: id === 'emma' ? [{ day: 'Sun', emoji: '🌸' }, { day: 'Mon', emoji: '🌸' }] : [{ day: 'Sun', emoji: '🌸' }],
+    totalDaysPlanned: totalDays,
+  };
+}
+
 export const useStore = create<StoreState>((set) => ({
   kids: [
-    {
-      id: 'emma',
-      name: 'Emma',
-      emoji: '👧',
-      cookieBalance: 47,
-      xp: 340,
-      totalXp: 340,
-      level: 'silver',
-      streak: 5,
-      longestStreak: 12,
-      tasks: DEFAULT_TASKS.map((t) => ({ ...t, completedToday: false })),
-      rewards: DEFAULT_REWARDS.map(r => ({ ...r, redeemed: false })),
-      achievements: DEFAULT_ACHIEVEMENTS.map((a, i) => ({ ...a, unlocked: i < 4, unlockedAt: i < 4 ? Date.now() - (4 - i) * 86400000 : undefined })),
-      depositBalance: 23,
-      depositHistory: [
-        { id: uid(), cookies: 10, date: Date.now() - 7 * 86400000, type: 'deposit' },
-        { id: uid(), cookies: 1, date: Date.now() - 3 * 86400000, type: 'bonus' },
-        { id: uid(), cookies: 12, date: Date.now() - 1 * 86400000, type: 'deposit' },
-      ],
-      weeklyGrowth: generateWeeklyGrowth(23),
-      moodLog: [
-        { day: 'Sun', emoji: '🌸' },
-        { day: 'Mon', emoji: '🌸' },
-      ],
-      totalDaysPlanned: 5,
-    },
-    {
-      id: 'lucas',
-      name: 'Lucas',
-      emoji: '👦',
-      cookieBalance: 31,
-      xp: 150,
-      totalXp: 150,
-      level: 'bronze',
-      streak: 2,
-      longestStreak: 8,
-      tasks: DEFAULT_TASKS.map((t) => ({ ...t, completedToday: false })),
-      rewards: DEFAULT_REWARDS.map(r => ({ ...r, redeemed: false })),
-      achievements: DEFAULT_ACHIEVEMENTS.map((a, i) => ({ ...a, unlocked: i < 2, unlockedAt: i < 2 ? Date.now() - (2 - i) * 86400000 : undefined })),
-      depositBalance: 45,
-      depositHistory: [
-        { id: uid(), cookies: 20, date: Date.now() - 14 * 86400000, type: 'deposit' },
-        { id: uid(), cookies: 2, date: Date.now() - 7 * 86400000, type: 'bonus' },
-        { id: uid(), cookies: 23, date: Date.now() - 2 * 86400000, type: 'deposit' },
-      ],
-      weeklyGrowth: generateWeeklyGrowth(45),
-      moodLog: [
-        { day: 'Sun', emoji: '🌸' },
-      ],
-      totalDaysPlanned: 3,
-    },
+    createKid('emma', 'Emma', '👧', 47, 340, 5, 12, 85, 4, 5),
+    createKid('lucas', 'Lucas', '👦', 31, 150, 2, 8, 45, 2, 3),
   ],
   activeKidId: null,
   viewMode: 'choose',
   activity: [
-    {
-      id: uid(),
-      kidId: 'emma',
-      type: 'award',
-      description: 'Morning routine',
-      cookies: 5,
-      timestamp: Date.now() - 3600000,
-    },
-    {
-      id: uid(),
-      kidId: 'lucas',
-      type: 'award',
-      description: 'Did homework',
-      cookies: 15,
-      timestamp: Date.now() - 7200000,
-    },
-    {
-      id: uid(),
-      kidId: 'emma',
-      type: 'invest',
-      description: 'Saved to deposit',
-      cookies: 12,
-      timestamp: Date.now() - 86400000,
-    },
+    { id: uid(), kidId: 'emma', type: 'award', description: 'Morning routine', cookies: 5, timestamp: Date.now() - 3600000 },
+    { id: uid(), kidId: 'emma', type: 'interest', description: 'Vault earned interest!', cookies: 2, timestamp: Date.now() - 86400000 },
+    { id: uid(), kidId: 'lucas', type: 'award', description: 'Did homework', cookies: 15, timestamp: Date.now() - 7200000 },
+    { id: uid(), kidId: 'emma', type: 'invest', description: 'Deposited to vault', cookies: 12, timestamp: Date.now() - 2 * 86400000 },
   ],
 
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -269,14 +295,7 @@ export const useStore = create<StoreState>((set) => ({
         k.id === kidId ? { ...k, cookieBalance: k.cookieBalance + amount } : k
       ),
       activity: [
-        {
-          id: uid(),
-          kidId,
-          type: 'award' as const,
-          description: taskName,
-          cookies: amount,
-          timestamp: Date.now(),
-        },
+        { id: uid(), kidId, type: 'award' as const, description: taskName, cookies: amount, timestamp: Date.now() },
         ...state.activity,
       ],
     })),
@@ -301,17 +320,9 @@ export const useStore = create<StoreState>((set) => ({
       }),
       activity: [
         {
-          id: uid(),
-          kidId,
-          type: 'award' as const,
-          description:
-            state.kids
-              .find((k) => k.id === kidId)
-              ?.tasks.find((t) => t.id === taskId)?.name ?? 'Task',
-          cookies:
-            state.kids
-              .find((k) => k.id === kidId)
-              ?.tasks.find((t) => t.id === taskId)?.cookies ?? 0,
+          id: uid(), kidId, type: 'award' as const,
+          description: state.kids.find((k) => k.id === kidId)?.tasks.find((t) => t.id === taskId)?.name ?? 'Task',
+          cookies: state.kids.find((k) => k.id === kidId)?.tasks.find((t) => t.id === taskId)?.cookies ?? 0,
           timestamp: Date.now(),
         },
         ...state.activity,
@@ -321,19 +332,10 @@ export const useStore = create<StoreState>((set) => ({
   redeemCashOut: (kidId, cookies) =>
     set((state) => ({
       kids: state.kids.map((k) =>
-        k.id === kidId
-          ? { ...k, cookieBalance: k.cookieBalance - cookies }
-          : k
+        k.id === kidId ? { ...k, cookieBalance: k.cookieBalance - cookies } : k
       ),
       activity: [
-        {
-          id: uid(),
-          kidId,
-          type: 'redeem' as const,
-          description: `Cashed out €${(cookies / 10).toFixed(2)}`,
-          cookies,
-          timestamp: Date.now(),
-        },
+        { id: uid(), kidId, type: 'redeem' as const, description: `Cashed out $${(cookies / (state.kids.find(k => k.id === kidId)?.financialSettings.conversionRate ?? 100)).toFixed(2)}`, cookies, timestamp: Date.now() },
         ...state.activity,
       ],
     })),
@@ -346,26 +348,13 @@ export const useStore = create<StoreState>((set) => ({
               ...k,
               cookieBalance: k.cookieBalance - cookies,
               depositBalance: k.depositBalance + cookies,
-              depositHistory: [
-                ...k.depositHistory,
-                { id: uid(), cookies, date: Date.now(), type: 'deposit' as const },
-              ],
-              weeklyGrowth: [
-                ...k.weeklyGrowth.slice(1),
-                k.depositBalance + cookies,
-              ],
+              depositHistory: [...k.depositHistory, { id: uid(), cookies, date: Date.now(), type: 'deposit' as const }],
+              weeklyGrowth: [...k.weeklyGrowth.slice(1), k.depositBalance + cookies],
             }
           : k
       ),
       activity: [
-        {
-          id: uid(),
-          kidId,
-          type: 'invest' as const,
-          description: 'Saved to deposit',
-          cookies,
-          timestamp: Date.now(),
-        },
+        { id: uid(), kidId, type: 'invest' as const, description: 'Saved to deposit', cookies, timestamp: Date.now() },
         ...state.activity,
       ],
     })),
@@ -375,21 +364,17 @@ export const useStore = create<StoreState>((set) => ({
       kids: state.kids.map((k) => {
         if (k.id !== kidId) return k;
         const reward = k.rewards.find(r => r.id === rewardId);
-        if (!reward || reward.redeemed || k.xp < reward.cost) return k;
+        if (!reward || reward.redeemed || k.cookieBalance < reward.cost) return k;
         const updated = {
           ...k,
-          xp: k.xp - reward.cost,
-          rewards: k.rewards.map(r =>
-            r.id === rewardId ? { ...r, redeemed: true } : r
-          ),
+          cookieBalance: k.cookieBalance - reward.cost,
+          rewards: k.rewards.map(r => r.id === rewardId ? { ...r, redeemed: true } : r),
         };
         return checkAchievements(updated);
       }),
       activity: [
         {
-          id: uid(),
-          kidId,
-          type: 'redeem' as const,
+          id: uid(), kidId, type: 'redeem' as const,
           description: state.kids.find(k => k.id === kidId)?.rewards.find(r => r.id === rewardId)?.name ?? 'Reward',
           cookies: state.kids.find(k => k.id === kidId)?.rewards.find(r => r.id === rewardId)?.cost ?? 0,
           timestamp: Date.now(),
@@ -401,18 +386,14 @@ export const useStore = create<StoreState>((set) => ({
   addTask: (kidId, task) =>
     set((state) => ({
       kids: state.kids.map((k) =>
-        k.id === kidId
-          ? { ...k, tasks: [...k.tasks, { ...task, completedToday: false }] }
-          : k
+        k.id === kidId ? { ...k, tasks: [...k.tasks, { ...task, completedToday: false }] } : k
       ),
     })),
 
   addReward: (kidId, reward) =>
     set((state) => ({
       kids: state.kids.map((k) =>
-        k.id === kidId
-          ? { ...k, rewards: [...k.rewards, { ...reward, redeemed: false }] }
-          : k
+        k.id === kidId ? { ...k, rewards: [...k.rewards, { ...reward, redeemed: false }] } : k
       ),
     })),
 
@@ -420,14 +401,129 @@ export const useStore = create<StoreState>((set) => ({
     set((state) => ({
       kids: state.kids.map((k) => {
         if (k.id !== kidId) return k;
-        const existing = k.moodLog.findIndex(m => m.day === day);
         const moodLog = [...k.moodLog];
-        if (existing >= 0) {
-          moodLog[existing] = { day, emoji };
-        } else {
-          moodLog.push({ day, emoji });
-        }
+        const existing = moodLog.findIndex(m => m.day === day);
+        if (existing >= 0) moodLog[existing] = { day, emoji };
+        else moodLog.push({ day, emoji });
         return { ...k, moodLog };
       }),
+    })),
+
+  // === Vault / Financial actions ===
+
+  depositToVault: (kidId, cookies) =>
+    set((state) => ({
+      kids: state.kids.map((k) => {
+        if (k.id !== kidId || k.cookieBalance < cookies) return k;
+        const updated = {
+          ...k,
+          cookieBalance: k.cookieBalance - cookies,
+          vaultBalance: k.vaultBalance + cookies,
+          vaultHistory: [...k.vaultHistory, { id: uid(), cookies, date: Date.now(), type: 'deposit' as const }],
+        };
+        return checkAchievements(updated);
+      }),
+      activity: [
+        { id: uid(), kidId, type: 'invest' as const, description: 'Deposited to vault', cookies, timestamp: Date.now() },
+        ...state.activity,
+      ],
+    })),
+
+  withdrawFromVault: (kidId, cookies) =>
+    set((state) => ({
+      kids: state.kids.map((k) => {
+        if (k.id !== kidId || k.vaultBalance < cookies) return k;
+        return {
+          ...k,
+          cookieBalance: k.cookieBalance + cookies,
+          vaultBalance: k.vaultBalance - cookies,
+          vaultHistory: [...k.vaultHistory, { id: uid(), cookies, date: Date.now(), type: 'withdrawal' as const }],
+        };
+      }),
+      activity: [
+        { id: uid(), kidId, type: 'redeem' as const, description: 'Withdrew from vault', cookies, timestamp: Date.now() },
+        ...state.activity,
+      ],
+    })),
+
+  requestCashOut: (kidId, cookies) =>
+    set((state) => ({
+      kids: state.kids.map((k) => {
+        if (k.id !== kidId || k.cookieBalance < cookies) return k;
+        const rate = k.financialSettings.conversionRate;
+        return {
+          ...k,
+          cookieBalance: k.cookieBalance - cookies,
+          cashOutRequests: [
+            ...k.cashOutRequests,
+            { id: uid(), cookies, realAmount: cookies / rate, status: 'pending' as const, createdAt: Date.now() },
+          ],
+        };
+      }),
+      activity: [
+        { id: uid(), kidId, type: 'cashout' as const, description: 'Cash out requested', cookies, timestamp: Date.now() },
+        ...state.activity,
+      ],
+    })),
+
+  approveCashOut: (kidId, requestId) =>
+    set((state) => ({
+      kids: state.kids.map((k) => {
+        if (k.id !== kidId) return k;
+        return {
+          ...k,
+          cashOutRequests: k.cashOutRequests.map(r =>
+            r.id === requestId ? { ...r, status: 'approved' as const, resolvedAt: Date.now() } : r
+          ),
+        };
+      }),
+    })),
+
+  denyCashOut: (kidId, requestId) =>
+    set((state) => ({
+      kids: state.kids.map((k) => {
+        if (k.id !== kidId) return k;
+        const req = k.cashOutRequests.find(r => r.id === requestId);
+        return {
+          ...k,
+          cookieBalance: k.cookieBalance + (req?.cookies ?? 0), // refund
+          cashOutRequests: k.cashOutRequests.map(r =>
+            r.id === requestId ? { ...r, status: 'denied' as const, resolvedAt: Date.now() } : r
+          ),
+        };
+      }),
+    })),
+
+  creditInterest: (kidId) =>
+    set((state) => ({
+      kids: state.kids.map((k) => {
+        if (k.id !== kidId || k.vaultBalance === 0) return k;
+        const interest = Math.max(1, Math.round(k.vaultBalance * k.financialSettings.interestRate));
+        return {
+          ...k,
+          vaultBalance: k.vaultBalance + interest,
+          totalInterestEarned: k.totalInterestEarned + interest,
+          lastInterestDate: Date.now(),
+          vaultHistory: [...k.vaultHistory, { id: uid(), cookies: interest, date: Date.now(), type: 'interest' as const }],
+        };
+      }),
+      activity: [
+        {
+          id: uid(), kidId, type: 'interest' as const,
+          description: 'Vault earned interest!',
+          cookies: Math.max(1, Math.round((state.kids.find(k => k.id === kidId)?.vaultBalance ?? 0) * (state.kids.find(k => k.id === kidId)?.financialSettings.interestRate ?? 0.02))),
+          timestamp: Date.now(),
+        },
+        ...state.activity,
+      ],
+    })),
+
+  updateFinancialSettings: (kidId, settings) =>
+    set((state) => ({
+      kids: state.kids.map((k) =>
+        k.id === kidId
+          ? { ...k, financialSettings: { ...k.financialSettings, ...settings } }
+          : k
+      ),
     })),
 }));
