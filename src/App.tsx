@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import PinPad from './components/PinPad';
+import KidBottomNav from './components/KidBottomNav';
 import ParentDashboard from './screens/ParentDashboard';
 import AwardFlow from './screens/AwardFlow';
 import KidCookieJar from './screens/KidCookieJar';
@@ -40,6 +41,9 @@ export default function App() {
 
   if (viewMode === 'locked') return <PinPad />;
 
+  const { pathname } = useLocation();
+  const showKidNav = ['/jar', '/redeem', '/deposit'].includes(pathname) || pathname.startsWith('/kid/');
+
   return (
     <div className="max-w-md mx-auto min-h-screen relative">
       <Routes>
@@ -52,6 +56,7 @@ export default function App() {
         <Route path="/deposit" element={<MyDeposit />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {showKidNav && <KidBottomNav />}
     </div>
   );
 }
