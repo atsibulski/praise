@@ -29,16 +29,16 @@ export default function MyDeposit() {
   };
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen pb-8 bg-cream">
       {/* Header */}
-      <div className="px-5 pt-12 pb-2 flex items-center gap-3">
+      <div className="px-5 pt-14 pb-2 flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500"
+          className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-warm-gray"
         >
           ←
         </button>
-        <h1 className="text-xl font-extrabold text-gray-800">My Deposit</h1>
+        <h1 className="text-2xl font-bold text-warm-gray font-heading">My Deposit</h1>
       </div>
 
       {/* Balance card */}
@@ -59,19 +59,19 @@ export default function MyDeposit() {
 
       {/* Growth chart */}
       <div className="px-5 mt-8">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
+        <h3 className="text-xs font-bold text-warm-gray-light uppercase tracking-wider mb-4">
           8-Week Growth
         </h3>
         {kid.depositBalance === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-3xl">
+          <div className="text-center py-12 bg-white rounded-3xl">
             <p className="text-4xl mb-2">📊</p>
-            <p className="text-gray-400 text-sm font-semibold">
+            <p className="text-warm-gray text-sm font-semibold">
               No investments yet
             </p>
-            <p className="text-gray-300 text-xs">Invest cookies to see growth!</p>
+            <p className="text-warm-gray-light text-xs">Invest cookies to see growth!</p>
           </div>
         ) : (
-          <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-3xl p-4">
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={chartData}>
                 <defs>
@@ -80,19 +80,19 @@ export default function MyDeposit() {
                     <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#F5F1EB" />
                 <XAxis
                   dataKey="week"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                  tick={{ fontSize: 11, fill: '#9C948A' }}
                 />
                 <YAxis hide />
                 <Tooltip
                   contentStyle={{
                     borderRadius: 12,
                     border: 'none',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                     fontSize: 12,
                   }}
                   formatter={(value) => [`${value} 🍪 (€${(Number(value) / 10).toFixed(2)})`, 'Balance']}
@@ -114,13 +114,13 @@ export default function MyDeposit() {
 
       {/* Investment history */}
       <div className="px-5 mt-8">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-bold text-warm-gray-light uppercase tracking-wider mb-3">
           Investment History
         </h3>
         {kid.depositHistory.length === 0 ? (
-          <div className="text-center py-8 text-gray-300">
+          <div className="text-center py-8 bg-white rounded-3xl">
             <p className="text-3xl mb-2">📋</p>
-            <p className="text-sm">No history yet</p>
+            <p className="text-sm text-warm-gray-light">No history yet</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -133,16 +133,20 @@ export default function MyDeposit() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-gray-50"
+                  className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3"
                 >
-                  <span className="text-lg">
-                    {entry.type === 'deposit' ? '💰' : '✨'}
-                  </span>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    entry.type === 'deposit' ? 'bg-purple-light' : 'bg-mint-light'
+                  }`}>
+                    <span className="text-lg">
+                      {entry.type === 'deposit' ? '💰' : '✨'}
+                    </span>
+                  </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-700">
+                    <p className="text-sm font-semibold text-warm-gray">
                       {entry.type === 'deposit' ? 'Investment' : 'Monthly Bonus'}
                     </p>
-                    <p className="text-xs text-gray-400">{formatDate(entry.date)}</p>
+                    <p className="text-xs text-warm-gray-light">{formatDate(entry.date)}</p>
                   </div>
                   <span
                     className={`text-sm font-bold ${

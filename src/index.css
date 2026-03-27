@@ -2,18 +2,24 @@
 
 @theme {
   --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Fraunces", ui-serif, Georgia, serif;
   --color-cookie: #F59E0B;
   --color-cookie-dark: #D97706;
   --color-cookie-light: #FEF3C7;
-  --color-mint: #10B981;
-  --color-mint-dark: #059669;
-  --color-mint-light: #D1FAE5;
+  --color-mint: #22C55E;
+  --color-mint-dark: #16A34A;
+  --color-mint-light: #DCFCE7;
   --color-purple: #8B5CF6;
   --color-purple-light: #EDE9FE;
   --color-pink: #EC4899;
+  --color-cream: #FBF8F1;
+  --color-cream-dark: #F3EEE2;
+  --color-warm-gray: #6B6157;
+  --color-warm-gray-light: #9C948A;
+  --color-warm-gray-lighter: #D4CFC8;
   --color-surface: #FFFFFF;
-  --color-surface-dim: #F9FAFB;
-  --color-surface-dimmer: #F3F4F6;
+  --color-surface-dim: #FAF8F5;
+  --color-surface-dimmer: #F5F1EB;
 }
 
 html, body, #root {
@@ -23,7 +29,7 @@ html, body, #root {
 
 body {
   font-family: var(--font-sans);
-  background: linear-gradient(180deg, #FEF3C7 0%, #FFFFFF 30%);
+  background: var(--color-cream);
   min-height: 100vh;
 }
 
@@ -65,4 +71,24 @@ body {
 
 .animate-swipe-hint {
   animation: swipeHint 1.5s ease-in-out 1;
+}
+
+/* Range slider warm style */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-cream-dark);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-cookie);
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
 }

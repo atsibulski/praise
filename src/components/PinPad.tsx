@@ -24,7 +24,7 @@ export default function PinPad() {
   const handleDelete = () => setPin((p) => p.slice(0, -1));
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6 bg-gradient-to-b from-cookie-light to-white">
+    <div className="flex flex-col items-center justify-center min-h-screen px-6 bg-cream">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -32,8 +32,8 @@ export default function PinPad() {
       >
         🍪
       </motion.div>
-      <h1 className="text-2xl font-extrabold text-gray-800 mb-1">Praise</h1>
-      <p className="text-gray-500 mb-8 text-sm">Enter parent PIN to continue</p>
+      <h1 className="text-3xl font-bold text-warm-gray mb-1 font-heading">Praise</h1>
+      <p className="text-warm-gray-light mb-8 text-sm">Enter parent PIN to continue</p>
 
       <div className="flex gap-3 mb-8">
         {[0, 1, 2, 3].map((i) => (
@@ -45,8 +45,8 @@ export default function PinPad() {
               pin.length > i
                 ? error
                   ? 'bg-red-400'
-                  : 'bg-cookie'
-                : 'bg-gray-200'
+                  : 'bg-mint'
+                : 'bg-cream-dark'
             }`}
           />
         ))}
@@ -57,7 +57,7 @@ export default function PinPad() {
           <button
             key={d}
             onClick={() => handleDigit(String(d))}
-            className="h-14 rounded-2xl bg-white shadow-sm text-xl font-bold text-gray-700 active:bg-cookie-light active:scale-95 transition-all"
+            className="h-14 rounded-2xl bg-white text-xl font-bold text-warm-gray active:bg-cream-dark active:scale-95 transition-all"
           >
             {d}
           </button>
@@ -65,13 +65,13 @@ export default function PinPad() {
         <div />
         <button
           onClick={() => handleDigit('0')}
-          className="h-14 rounded-2xl bg-white shadow-sm text-xl font-bold text-gray-700 active:bg-cookie-light active:scale-95 transition-all"
+          className="h-14 rounded-2xl bg-white text-xl font-bold text-warm-gray active:bg-cream-dark active:scale-95 transition-all"
         >
           0
         </button>
         <button
           onClick={handleDelete}
-          className="h-14 rounded-2xl text-gray-400 text-lg active:scale-95 transition-all"
+          className="h-14 rounded-2xl text-warm-gray-light text-lg active:scale-95 transition-all"
         >
           ⌫
         </button>
@@ -79,7 +79,7 @@ export default function PinPad() {
 
       <button
         onClick={() => setViewMode('kid')}
-        className="mt-8 text-sm text-cookie-dark font-semibold"
+        className="mt-8 text-sm text-mint-dark font-semibold"
       >
         I'm a kid — skip PIN →
       </button>

@@ -18,16 +18,16 @@ export default function ParentDashboard() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen pb-8">
+    <div className="min-h-screen pb-8 bg-cream">
       {/* Header */}
-      <div className="px-5 pt-12 pb-4 flex items-center justify-between">
+      <div className="px-5 pt-14 pb-5 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-gray-800">Praise</h1>
-          <p className="text-sm text-gray-400">Parent Dashboard</p>
+          <h1 className="text-2xl font-bold text-warm-gray font-heading">Praise</h1>
+          <p className="text-sm text-warm-gray-light">Parent Dashboard</p>
         </div>
         <button
           onClick={() => setViewMode('locked')}
-          className="text-xs bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-semibold"
+          className="text-xs bg-cream-dark text-warm-gray-light px-3 py-1.5 rounded-full font-semibold"
         >
           Lock 🔒
         </button>
@@ -41,14 +41,16 @@ export default function ParentDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100"
+            className="bg-white rounded-3xl p-5"
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{kid.emoji}</span>
+                <div className="w-12 h-12 rounded-full bg-cream flex items-center justify-center">
+                  <span className="text-2xl">{kid.emoji}</span>
+                </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-800">{kid.name}</h2>
-                  <p className="text-xs text-gray-400">
+                  <h2 className="text-lg font-bold text-warm-gray">{kid.name}</h2>
+                  <p className="text-xs text-warm-gray-light">
                     🔥 {kid.streak} day streak
                   </p>
                 </div>
@@ -65,7 +67,7 @@ export default function ParentDashboard() {
             <div className="flex gap-2">
               <button
                 onClick={() => navigate(`/award/${kid.id}`)}
-                className="flex-1 bg-cookie text-white font-bold py-2.5 rounded-2xl text-sm active:scale-95 transition-transform shadow-sm"
+                className="flex-1 bg-mint text-white font-bold py-3 rounded-2xl text-sm active:scale-95 transition-transform"
               >
                 Award Cookies 🍪
               </button>
@@ -75,7 +77,7 @@ export default function ParentDashboard() {
                   setViewMode('kid');
                   navigate('/jar');
                 }}
-                className="px-4 bg-gray-100 text-gray-600 font-semibold py-2.5 rounded-2xl text-sm active:scale-95 transition-transform"
+                className="px-5 bg-cream text-warm-gray font-semibold py-3 rounded-2xl text-sm active:scale-95 transition-transform"
               >
                 View
               </button>
@@ -86,13 +88,13 @@ export default function ParentDashboard() {
 
       {/* Activity Feed */}
       <div className="px-5">
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-bold text-warm-gray-light uppercase tracking-wider mb-3">
           Recent Activity
         </h3>
         {activity.length === 0 ? (
-          <div className="text-center py-12 text-gray-300">
+          <div className="text-center py-12 bg-white rounded-3xl">
             <p className="text-4xl mb-2">📋</p>
-            <p className="text-sm">No activity yet. Award some cookies!</p>
+            <p className="text-sm text-warm-gray-light">No activity yet. Award some cookies!</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -104,17 +106,19 @@ export default function ParentDashboard() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 border border-gray-50"
+                  className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3"
                 >
-                  <span className="text-lg">{kid?.emoji}</span>
+                  <div className="w-9 h-9 rounded-full bg-cream flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg">{kid?.emoji}</span>
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-700 truncate">
+                    <p className="text-sm font-semibold text-warm-gray truncate">
                       {item.description}
                     </p>
-                    <p className="text-xs text-gray-400">{timeAgo(item.timestamp)}</p>
+                    <p className="text-xs text-warm-gray-light">{timeAgo(item.timestamp)}</p>
                   </div>
                   <span
-                    className={`text-sm font-bold ${
+                    className={`text-sm font-bold flex-shrink-0 ${
                       item.type === 'award'
                         ? 'text-mint'
                         : item.type === 'invest'

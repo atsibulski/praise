@@ -27,7 +27,7 @@ export default function RedeemScreen() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-5">
+      <div className="min-h-screen flex flex-col items-center justify-center px-5 bg-cream">
         <Confetti />
         <motion.div
           initial={{ scale: 0 }}
@@ -36,20 +36,20 @@ export default function RedeemScreen() {
         >
           <p className="text-6xl mb-4">{mode === 'cashout' ? '💸' : '🏦'}</p>
         </motion.div>
-        <h2 className="text-2xl font-extrabold text-gray-800 mb-2">
+        <h2 className="text-2xl font-bold text-warm-gray mb-2 font-heading">
           {mode === 'cashout' ? 'Cash Out Complete!' : 'Invested!'}
         </h2>
-        <p className="text-gray-500 mb-1">
+        <p className="text-warm-gray-light mb-1">
           {amount} 🍪 {mode === 'cashout' ? 'cashed out' : 'invested'}
         </p>
-        <p className="text-cookie-dark font-bold mb-8">
+        <p className="text-mint-dark font-bold mb-8">
           {mode === 'cashout'
             ? `€${(amount / 10).toFixed(2)} coming your way!`
             : 'Earning 5% bonus/month!'}
         </p>
         <button
           onClick={() => navigate(-1)}
-          className="bg-gray-100 text-gray-600 font-bold px-8 py-3 rounded-2xl"
+          className="bg-cream-dark text-warm-gray font-bold px-8 py-3 rounded-2xl"
         >
           Back to Cookie Jar
         </button>
@@ -58,25 +58,25 @@ export default function RedeemScreen() {
   }
 
   return (
-    <div className="min-h-screen px-5 pt-12 pb-8">
+    <div className="min-h-screen px-5 pt-14 pb-8 bg-cream">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => (mode === 'choose' ? navigate(-1) : setMode('choose'))}
-          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500"
+          className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-warm-gray"
         >
           ←
         </button>
-        <h1 className="text-xl font-extrabold text-gray-800">Redeem Cookies</h1>
+        <h1 className="text-2xl font-bold text-warm-gray font-heading">Redeem Cookies</h1>
       </div>
 
       {/* Balance */}
       <div className="text-center mb-8">
-        <p className="text-sm text-gray-400">Available</p>
-        <p className="text-3xl font-extrabold text-cookie-dark">
+        <p className="text-sm text-warm-gray-light">Available</p>
+        <p className="text-3xl font-bold text-cookie-dark font-heading">
           {kid.cookieBalance} 🍪
         </p>
-        <p className="text-sm text-gray-400">€{(kid.cookieBalance / 10).toFixed(2)}</p>
+        <p className="text-sm text-warm-gray-light">€{(kid.cookieBalance / 10).toFixed(2)}</p>
       </div>
 
       <AnimatePresence mode="wait">
@@ -86,28 +86,30 @@ export default function RedeemScreen() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-4"
+            className="space-y-3"
           >
             {kid.cookieBalance === 0 ? (
-              <div className="text-center py-12">
+              <div className="text-center py-12 bg-white rounded-3xl">
                 <p className="text-5xl mb-3">🍪</p>
-                <p className="text-gray-400 font-semibold">No cookies to redeem yet!</p>
-                <p className="text-sm text-gray-300">Complete tasks to earn cookies.</p>
+                <p className="text-warm-gray font-semibold">No cookies to redeem yet!</p>
+                <p className="text-sm text-warm-gray-light">Complete tasks to earn cookies.</p>
               </div>
             ) : (
               <>
                 <button
                   onClick={() => { setMode('cashout'); setAmount(Math.min(10, maxAmount)); }}
-                  className="w-full bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-left active:scale-[0.98] transition-transform"
+                  className="w-full bg-white rounded-2xl p-5 text-left active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center gap-4">
-                    <span className="text-4xl">💸</span>
+                    <div className="w-12 h-12 rounded-full bg-mint-light flex items-center justify-center">
+                      <span className="text-2xl">💸</span>
+                    </div>
                     <div>
-                      <h3 className="font-extrabold text-gray-800 text-lg">Cash Out</h3>
-                      <p className="text-sm text-gray-400">
+                      <h3 className="font-bold text-warm-gray text-lg">Cash Out</h3>
+                      <p className="text-sm text-warm-gray-light">
                         Turn cookies into real euros
                       </p>
-                      <p className="text-xs text-cookie-dark font-semibold mt-1">
+                      <p className="text-xs text-mint-dark font-semibold mt-1">
                         10 🍪 = €1.00
                       </p>
                     </div>
@@ -116,13 +118,15 @@ export default function RedeemScreen() {
 
                 <button
                   onClick={() => { setMode('invest'); setAmount(Math.min(10, maxAmount)); }}
-                  className="w-full bg-white rounded-3xl p-6 shadow-sm border border-gray-100 text-left active:scale-[0.98] transition-transform"
+                  className="w-full bg-white rounded-2xl p-5 text-left active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center gap-4">
-                    <span className="text-4xl">🏦</span>
+                    <div className="w-12 h-12 rounded-full bg-purple-light flex items-center justify-center">
+                      <span className="text-2xl">🏦</span>
+                    </div>
                     <div>
-                      <h3 className="font-extrabold text-gray-800 text-lg">Save & Grow</h3>
-                      <p className="text-sm text-gray-400">
+                      <h3 className="font-bold text-warm-gray text-lg">Save & Grow</h3>
+                      <p className="text-sm text-warm-gray-light">
                         Invest into your deposit
                       </p>
                       <p className="text-xs text-purple font-semibold mt-1">
@@ -143,17 +147,17 @@ export default function RedeemScreen() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+            <div className="bg-white rounded-3xl p-6 mb-6">
               <p className="text-center text-5xl mb-4">
                 {mode === 'cashout' ? '💸' : '🏦'}
               </p>
-              <p className="text-center text-sm text-gray-400 mb-2">
+              <p className="text-center text-sm text-warm-gray-light mb-2">
                 {mode === 'cashout' ? 'Cash out amount' : 'Investment amount'}
               </p>
-              <p className="text-center text-4xl font-extrabold text-cookie-dark mb-1">
+              <p className="text-center text-4xl font-bold text-cookie-dark mb-1 font-heading">
                 {amount} 🍪
               </p>
-              <p className="text-center text-sm text-gray-400 mb-6">
+              <p className="text-center text-sm text-warm-gray-light mb-6">
                 €{(amount / 10).toFixed(2)}
               </p>
 
@@ -163,9 +167,9 @@ export default function RedeemScreen() {
                 max={maxAmount}
                 value={amount}
                 onChange={(e) => setAmount(parseInt(e.target.value))}
-                className="w-full accent-cookie h-2 rounded-full appearance-none bg-gray-200 cursor-pointer"
+                className="w-full h-1.5 rounded-full cursor-pointer"
               />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <div className="flex justify-between text-xs text-warm-gray-light mt-1">
                 <span>1 🍪</span>
                 <span>{maxAmount} 🍪</span>
               </div>
@@ -184,8 +188,8 @@ export default function RedeemScreen() {
               onClick={mode === 'cashout' ? handleCashOut : handleInvest}
               className={`w-full font-extrabold text-lg py-4 rounded-2xl shadow-lg text-white ${
                 mode === 'cashout'
-                  ? 'bg-mint shadow-mint/30'
-                  : 'bg-purple shadow-purple/30'
+                  ? 'bg-mint shadow-mint/25'
+                  : 'bg-purple shadow-purple/25'
               }`}
             >
               {mode === 'cashout'

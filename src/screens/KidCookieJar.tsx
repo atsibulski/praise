@@ -9,11 +9,11 @@ function SwipeTask({
   task,
   onComplete,
 }: {
-  task: { id: string; name: string; cookies: number; completedToday: boolean };
+  task: { id: string; name: string; cookies: number; completedToday: boolean; icon?: string };
   onComplete: () => void;
 }) {
   const x = useMotionValue(0);
-  const bg = useTransform(x, [-120, 0], ['#10B981', '#FFFFFF']);
+  const bg = useTransform(x, [-120, 0], ['#22C55E', '#FFFFFF']);
   const checkOpacity = useTransform(x, [-120, -60, 0], [1, 0.5, 0]);
   const constraintsRef = useRef(null);
 
@@ -37,31 +37,40 @@ function SwipeTask({
         onDragEnd={(_, info) => {
           if (info.offset.x < -100) onComplete();
         }}
-        className={`relative flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 border border-gray-100 z-10 ${
-          task.completedToday ? 'opacity-50' : ''
+        className={`relative flex items-center gap-3 bg-white rounded-2xl px-4 py-4 z-10 ${
+          task.completedToday ? 'opacity-60' : ''
         }`}
       >
+        {/* Circle checkbox */}
         <div
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+          className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
             task.completedToday
               ? 'bg-mint border-mint text-white'
-              : 'border-gray-300'
+              : 'border-warm-gray-lighter'
           }`}
         >
-          {task.completedToday && <span className="text-xs">✓</span>}
+          {task.completedToday && (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 7L6 10L11 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
         </div>
-        <div className="flex-1">
+
+        <div className="flex-1 min-w-0">
           <p
-            className={`font-semibold ${
-              task.completedToday ? 'line-through text-gray-400' : 'text-gray-700'
+            className={`font-bold text-[15px] ${
+              task.completedToday ? 'line-through text-warm-gray-light' : 'text-warm-gray'
             }`}
           >
             {task.name}
           </p>
+          <p className="text-xs text-warm-gray-light mt-0.5">
+            ↻ daily
+          </p>
         </div>
-        <span className="text-cookie-dark font-bold text-sm">+{task.cookies} 🍪</span>
+        <span className="text-mint-dark font-bold text-sm flex-shrink-0">+{task.cookies}🍪</span>
         {!task.completedToday && (
-          <span className="text-gray-300 text-xs animate-swipe-hint">← swipe</span>
+          <span className="text-warm-gray-lighter text-[10px] animate-swipe-hint flex-shrink-0">← swipe</span>
         )}
       </motion.div>
     </div>
@@ -84,64 +93,63 @@ export default function KidCookieJar() {
   const allDone = completedCount === kid.tasks.length;
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-24 bg-cream">
       <AnimatePresence>
         {burst && <CookieBurst originX={50} originY={30} />}
       </AnimatePresence>
 
-      {/* Header */}
-      <div className="px-5 pt-12 pb-2 flex items-center justify-between">
-        <button
-          onClick={() => {
-            setViewMode('parent');
-            navigate('/');
-          }}
-          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500"
-        >
-          ←
-        </button>
-        <div className="text-center">
-          <p className="text-sm text-gray-400">{kid.emoji} {kid.name}'s</p>
-          <h1 className="text-lg font-extrabold text-gray-800">Cookie Jar</h1>
+      {/* Header bar */}
+      <div className="bg-mint px-5 pt-14 pb-6 rounded-b-[28px]">
+        <div className="flex items-center justify-between mb-5">
+          <button
+            onClick={() => {
+              setViewMode('parent');
+              navigate('/');
+            }}
+            className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white"
+          >
+            ←
+          </button>
+          <p className="text-white/80 font-semibold text-sm font-heading">{kid.emoji} {kid.name}'s Cookie Jar</p>
+          <div className="w-9" />
         </div>
-        <div className="w-10" />
-      </div>
 
-      {/* Hero balance */}
-      <div className="text-center py-8">
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', bounce: 0.4 }}
-          className="text-6xl mb-3"
-        >
-          🍪
-        </motion.div>
-        <AnimatedCookieCount
-          value={kid.cookieBalance}
-          className="text-5xl font-extrabold text-cookie-dark block"
-          showEuro
-          duration={1200}
-        />
-        <div className="flex items-center justify-center gap-2 mt-3">
-          <span className="bg-orange-100 text-orange-600 text-sm font-bold px-3 py-1 rounded-full">
-            🔥 {kid.streak} day streak
-          </span>
-          {kid.depositBalance > 0 && (
-            <span className="bg-purple-100 text-purple-600 text-sm font-bold px-3 py-1 rounded-full">
-              💰 {kid.depositBalance} saved
+        {/* Hero balance */}
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', bounce: 0.4 }}
+            className="text-5xl mb-2"
+          >
+            🍪
+          </motion.div>
+          <AnimatedCookieCount
+            value={kid.cookieBalance}
+            className="text-4xl font-extrabold text-white block"
+            showEuro
+            duration={1200}
+          />
+          <div className="flex items-center justify-center gap-2 mt-3">
+            <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
+              🔥 {kid.streak} day streak
             </span>
-          )}
+            {kid.depositBalance > 0 && (
+              <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
+                📈 {kid.depositBalance} saved
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Today's tasks */}
-      <div className="px-5 mb-6">
+      <div className="px-5 mt-6 mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">
+          <h3 className="text-xs font-bold text-warm-gray-light uppercase tracking-wider">
             Today's Tasks
           </h3>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs font-semibold text-mint-dark">
             {completedCount}/{kid.tasks.length} done
           </span>
         </div>
@@ -150,11 +158,11 @@ export default function KidCookieJar() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-center py-8 bg-mint-light rounded-3xl"
+            className="text-center py-10 bg-mint-light rounded-3xl"
           >
             <p className="text-4xl mb-2">🌟</p>
-            <p className="font-bold text-mint-dark">All tasks complete!</p>
-            <p className="text-sm text-gray-400">Amazing work today!</p>
+            <p className="font-bold text-mint-dark text-lg">All tasks complete!</p>
+            <p className="text-sm text-warm-gray-light">Amazing work today!</p>
           </motion.div>
         ) : (
           <div className="space-y-2">
@@ -174,7 +182,7 @@ export default function KidCookieJar() {
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/redeem')}
-          className="w-full bg-gradient-to-r from-cookie to-cookie-dark text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg shadow-cookie/30"
+          className="w-full bg-mint text-white font-extrabold text-lg py-4 rounded-2xl shadow-lg shadow-mint/25"
         >
           Redeem Cookies 🎁
         </motion.button>
