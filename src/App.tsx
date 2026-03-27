@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import PinPad from './components/PinPad';
 import ParentDashboard from './screens/ParentDashboard';
@@ -6,6 +7,25 @@ import AwardFlow from './screens/AwardFlow';
 import KidCookieJar from './screens/KidCookieJar';
 import RedeemScreen from './screens/RedeemScreen';
 import MyDeposit from './screens/MyDeposit';
+
+function KidEntry() {
+  const { kidName } = useParams();
+  const kids = useStore((s) => s.kids);
+  const setActiveKid = useStore((s) => s.setActiveKid);
+  const setViewMode = useStore((s) => s.setViewMode);
+
+  const kid = kids.find((k) => k.name.toLowerCase() === kidName?.toLowerCase());
+
+  useEffect(() => {
+    if (kid) {
+      setActiveKid(kid.id);
+      setViewMode('kid');
+    }
+  }, [kid, setActiveKid, setViewMode]);
+
+  if (!kid) return <Navigate to="/" replace />;
+  return <KidCookieJar />;
+}
 
 export default function App() {
   const viewMode = useStore((s) => s.viewMode);
@@ -24,6 +44,7 @@ export default function App() {
     <div className="max-w-md mx-auto min-h-screen relative">
       <Routes>
         <Route path="/" element={<ParentDashboard />} />
+        <Route path="/kid/:kidName" element={<KidEntry />} />
         <Route path="/award/:kidId" element={<AwardFlow />} />
         <Route path="/award" element={<AwardFlow />} />
         <Route path="/jar" element={<KidCookieJar />} />
